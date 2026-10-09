@@ -110,23 +110,16 @@ impl Tree {
 
     /// Done todos, most recently checked off first.
     pub fn done_rows(&self) -> Vec<Row> {
-        let mut done: Vec<(chrono::DateTime<chrono::FixedOffset>, &Todo)> = self
-            .todos
-            .iter()
-            .filter_map(|t| Some((chrono::DateTime::parse_from_rfc3339(t.done_at.as_deref()?).ok()?, t)))
-            .collect();
+        let mut done: Vec<(chrono::DateTime<chrono::FixedOffset>, &Todo)> =
+            self.todos.iter().filter_map(|t| Some((chrono::DateTime::parse_from_rfc3339(t.done_at.as_deref()?).ok()?, t))).collect();
         done.sort_by(|a, b| b.0.cmp(&a.0).then(b.1.id.cmp(&a.1.id)));
         done.into_iter().map(|(_, t)| Row { id: t.id, depth: 0 }).collect()
     }
 
     /// Open todos with a linked session, most recently active first. Undated sessions sink to the bottom.
     pub fn active_rows<T: Ord>(&self, last_active: &dyn Fn(&SessionLink) -> Option<T>) -> Vec<Row> {
-        let mut active: Vec<(Option<T>, TodoId)> = self
-            .todos
-            .iter()
-            .filter(|t| !t.is_done())
-            .filter_map(|t| Some((last_active(self.session_for(t.id)?), t.id)))
-            .collect();
+        let mut active: Vec<(Option<T>, TodoId)> =
+            self.todos.iter().filter(|t| !t.is_done()).filter_map(|t| Some((last_active(self.session_for(t.id)?), t.id))).collect();
         active.sort_by(|a, b| b.0.cmp(&a.0).then(b.1.cmp(&a.1)));
         active.into_iter().map(|(_, id)| Row { id, depth: 0 }).collect()
     }
@@ -156,7 +149,15 @@ mod tests {
     use super::*;
 
     fn todo(id: TodoId, done_at: Option<&str>) -> Todo {
-        Todo { id, parent_id: None, position: id, title: id.to_string(), dir: None, done_at: done_at.map(str::to_string), created_at: String::new() }
+        Todo {
+            id,
+            parent_id: None,
+            position: id,
+            title: id.to_string(),
+            dir: None,
+            done_at: done_at.map(str::to_string),
+            created_at: String::new(),
+        }
     }
 
     #[test]

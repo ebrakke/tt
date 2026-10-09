@@ -241,12 +241,8 @@ impl App {
         match res {
             Err(e) => self.status = format!("suggestions failed: {e}"),
             Ok(s) => {
-                let items: Vec<(Suggestion, bool)> = s
-                    .done
-                    .into_iter()
-                    .filter(|d| self.tree.get(d.id).is_some_and(|t| !t.is_done()))
-                    .map(|d| (d, true))
-                    .collect();
+                let items: Vec<(Suggestion, bool)> =
+                    s.done.into_iter().filter(|d| self.tree.get(d.id).is_some_and(|t| !t.is_done())).map(|d| (d, true)).collect();
                 if items.is_empty() {
                     self.status = "All in sync.".into();
                 } else {
@@ -332,7 +328,12 @@ impl App {
                         buf = format!("{head}{only}/");
                     } else if let Some(first) = names.first() {
                         let lcp = names.iter().fold(first.as_str(), |acc, n| {
-                            let len = acc.char_indices().zip(n.chars()).take_while(|((_, a), b)| a == b).last().map_or(0, |((i, c), _)| i + c.len_utf8());
+                            let len = acc
+                                .char_indices()
+                                .zip(n.chars())
+                                .take_while(|((_, a), b)| a == b)
+                                .last()
+                                .map_or(0, |((i, c), _)| i + c.len_utf8());
                             &acc[..len]
                         });
                         buf = format!("{head}{lcp}");
@@ -460,9 +461,11 @@ impl App {
     fn start_session(&mut self, id: TodoId, terminal: &mut DefaultTerminal) {
         let Some(todo) = self.tree.get(id) else { return };
         let name: String = todo.title.chars().take(30).collect();
-        let cwd = self.tree.dir_for(id).map(str::to_string).unwrap_or_else(|| {
-            std::env::current_dir().map(|p| p.display().to_string()).unwrap_or_default()
-        });
+        let cwd = self
+            .tree
+            .dir_for(id)
+            .map(str::to_string)
+            .unwrap_or_else(|| std::env::current_dir().map(|p| p.display().to_string()).unwrap_or_default());
         let tickets = self.tree.tickets_for(id);
         let mut prompt = format!("Let's work on todo #{id} from tt: {}", self.tree.path(id));
         if !tickets.is_empty() {
@@ -599,8 +602,7 @@ impl App {
     }
 
     fn draw(&mut self, f: &mut Frame) {
-        let [main, detail, bar] =
-            Layout::vertical([Constraint::Min(3), Constraint::Length(3), Constraint::Length(1)]).areas(f.area());
+        let [main, detail, bar] = Layout::vertical([Constraint::Min(3), Constraint::Length(3), Constraint::Length(1)]).areas(f.area());
 
         let rows = self.rows.clone();
         let items: Vec<ListItem> = rows.iter().map(|r| ListItem::new(self.row_line(r))).collect();
@@ -804,9 +806,7 @@ fn popup(f: &mut Frame, title: &str, lines: Vec<Line>, width: u16, height: u16) 
     let h = height.min(area.height.saturating_sub(2));
     let r = Rect { x: area.x + (area.width - w) / 2, y: area.y + (area.height - h) / 3, width: w, height: h };
     f.render_widget(Clear, r);
-    let p = Paragraph::new(lines)
-        .wrap(Wrap { trim: false })
-        .block(Block::default().borders(Borders::ALL).title(format!(" {title} ")));
+    let p = Paragraph::new(lines).wrap(Wrap { trim: false }).block(Block::default().borders(Borders::ALL).title(format!(" {title} ")));
     f.render_widget(p, r);
 }
 

@@ -102,7 +102,9 @@ pub fn tmux_edit(title: &str, initial: &str) -> anyhow::Result<Option<String>> {
          -c 'nnoremap <buffer> <CR> <Cmd>silent wq<CR>' -c 'inoremap <buffer> <CR> <Cmd>silent wq<CR>' -c 'startinsert!' '{}'",
         path.display()
     );
-    let status = Command::new("tmux").args(["display-popup", "-E", "-x", "C", "-y", "C", "-w", "72", "-h", "5", "-T", &format!(" {title} "), &nvim]).status();
+    let status = Command::new("tmux")
+        .args(["display-popup", "-E", "-x", "C", "-y", "C", "-w", "72", "-h", "5", "-T", &format!(" {title} "), &nvim])
+        .status();
     let saved = std::fs::metadata(&path)?.modified()? != before;
     let text = std::fs::read_to_string(&path).unwrap_or_default();
     let _ = std::fs::remove_file(&path);
@@ -182,12 +184,8 @@ pub fn recent_activity(since: SystemTime, limit: usize) -> Vec<Activity> {
                 .filter(|l| l.contains("\"type\":\"assistant\""))
                 .filter_map(|l| {
                     let v: serde_json::Value = serde_json::from_str(l).ok()?;
-                    let text: String = v["message"]["content"]
-                        .as_array()?
-                        .iter()
-                        .filter_map(|c| c["text"].as_str())
-                        .collect::<Vec<_>>()
-                        .join(" ");
+                    let text: String =
+                        v["message"]["content"].as_array()?.iter().filter_map(|c| c["text"].as_str()).collect::<Vec<_>>().join(" ");
                     (!text.trim().is_empty()).then(|| text.chars().take(500).collect())
                 })
                 .take(3)

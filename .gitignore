@@ -1,3 +1,4 @@
 target
 claude-mod/.claude-plugin/types
 claude-mod/tsconfig.json
+.tt-dev

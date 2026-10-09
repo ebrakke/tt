@@ -92,14 +92,10 @@ impl Store {
             .collect::<rusqlite::Result<Vec<_>>>()?;
         let mut st = self.conn.prepare("SELECT todo_id, session_id, cwd, linked_at FROM session_links")?;
         let sessions = st
-            .query_map([], |r| {
-                Ok(SessionLink { todo_id: r.get(0)?, session_id: r.get(1)?, cwd: r.get(2)?, linked_at: r.get(3)? })
-            })?
+            .query_map([], |r| Ok(SessionLink { todo_id: r.get(0)?, session_id: r.get(1)?, cwd: r.get(2)?, linked_at: r.get(3)? }))?
             .collect::<rusqlite::Result<Vec<_>>>()?;
         let mut st = self.conn.prepare("SELECT todo_id, key FROM ticket_links")?;
-        let tickets = st
-            .query_map([], |r| Ok(TicketLink { todo_id: r.get(0)?, key: r.get(1)? }))?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
+        let tickets = st.query_map([], |r| Ok(TicketLink { todo_id: r.get(0)?, key: r.get(1)? }))?.collect::<rusqlite::Result<Vec<_>>>()?;
         Ok(Tree { todos, sessions, tickets })
     }
 
@@ -241,18 +237,13 @@ impl Store {
 
     pub fn link_ticket(&self, id: TodoId, key: &str) -> Result<()> {
         self.require(id)?;
-        self.conn.execute(
-            "INSERT OR IGNORE INTO ticket_links (todo_id, key) VALUES (?1, ?2)",
-            params![id, key.trim().to_uppercase()],
-        )?;
+        self.conn.execute("INSERT OR IGNORE INTO ticket_links (todo_id, key) VALUES (?1, ?2)", params![id, key.trim().to_uppercase()])?;
         Ok(())
     }
 
     pub fn add_reflection(&self, started_at: &str, ended_at: &str, body: &str) -> Result<()> {
-        self.conn.execute(
-            "INSERT INTO reflections (started_at, ended_at, body) VALUES (?1, ?2, ?3)",
-            params![started_at, ended_at, body],
-        )?;
+        self.conn
+            .execute("INSERT INTO reflections (started_at, ended_at, body) VALUES (?1, ?2, ?3)", params![started_at, ended_at, body])?;
         Ok(())
     }
 }
